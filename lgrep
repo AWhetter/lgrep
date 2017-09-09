@@ -1,0 +1,24 @@
+#!/bin/bash
+set -e
+
+# Search src/, lib/, ./ in that order,
+# unless a search directory has been specified
+if [[ ! -d "${@: -1}" ]]; then
+	if [[ -d src ]]; then
+		dir=src
+	elif [[ -d lib ]]; then
+		dir=lib
+	else
+		dir="."
+	fi
+fi
+
+extra_args=("--binary-files=without-match")
+if [[ "$dir" == "." || "${@: -1}" == "." ]]; then
+	extra_args+=("--exclude-dir=.git" "--exclude-dir=doc")
+fi
+
+temp=$(mktemp)
+grep -nHr "${extra_args[@]}" "$@" $dir > $temp
+vim -c "lgetfile $temp" -c "lw" -c "wincmd o"
+rm -f $temp
